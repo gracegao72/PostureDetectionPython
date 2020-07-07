@@ -83,25 +83,22 @@ def get_head_pose(shape):
        
     if(j==0):  
         for k in range(7):
+            s = ""
             avg+=pit[k]
         if(avg/7>2 and avg/7<=17):
-            speak('Humped Back Sitting.')
-            print("Humped Back Sitting.")
-            
+            s = 'Humped Back Sitting.'  
         elif(avg/7<-2 and avg/7>=-17):
-            speak('Inclined Sitting Position.')
-            print("Inclined Sitting Position.")
+            s = 'Inclined Sitting Position.'
         elif(avg/7>17):
-            speak('You are looking down.')
-            print("You are looking down.")
+            s = 'You are looking down.'
         elif(avg/7<-17):
-            speak('You are overly inclined.')
-            print("You are overly inclined.")
+            s = 'You are overly inclined.'
         else:
-            speak('You are approximatly sitting straight.')
-            print("You are approximatly sitting straight.") 
+            s = 'You are approximatly sitting straight.'
     #pitch = euler_angle[0]
     #print(pitch)
+        print(s)
+        speak(s)
     return reprojectdst, euler_angle
  
     
@@ -137,8 +134,8 @@ def main():
                 for (x, y) in shape:
                     cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
 
-                for start, end in line_pairs:
-                    cv2.line(frame, reprojectdst[start], reprojectdst[end], (0, 0, 255))
+               # for start, end in line_pairs:
+                  #  cv2.line(frame, reprojectdst[start], reprojectdst[end], (0, 0, 255))
                 
                 cv2.putText(frame, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
                             0.75, (0, 0, 0), thickness=2)

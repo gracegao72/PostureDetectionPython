@@ -8,7 +8,8 @@ import time
 import playsound
 import speech_recognition as sr
 from gtts import gTTS
-
+import pyttsx3
+import pygame
 
 face_landmark_path = './shape_predictor_68_face_landmarks.dat'
 
@@ -72,19 +73,20 @@ def get_head_pose(shape):
     _, _, _, _, _, _, euler_angle = cv2.decomposeProjectionMatrix(pose_mat)
 	#"""yaw = euler_angle[1], roll = euler_angle[2], pitch = euler_angle[0]"""
 
-    
+
     j=i%7
     i+=1;
 
     #print(i)
     pit[j]=euler_angle[0]
     avg=0
-    
-       
+
+    audio = True
     if(j==0):  
         for k in range(7):
             s = ""
             avg+=pit[k]
+
         if(avg/7>2 and avg/7<=17):
             s = 'Humped Back Sitting.'  
         elif(avg/7<-2 and avg/7>=-17):
@@ -95,15 +97,18 @@ def get_head_pose(shape):
             s = 'You are overly inclined.'
         else:
             s = 'You are approximatly sitting straight.'
+            audio = False
     #pitch = euler_angle[0]
     #print(pitch)
         print(s)
         #speak(s)
         #speak_alt(s)
-        
+        if(audio):
+            speak_pygame()
+        pygame.mixer.stop()
     return reprojectdst, euler_angle
- 
-    
+
+
 def main():
     # return
     cap = cv2.VideoCapture(0)
@@ -112,11 +117,18 @@ def main():
         return
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor("./shape_predictor_68_face_landmarks (1).dat")
-    starttime = time.time();
+    #starttime = time.time();
+    time = 0
     while cap.isOpened():
         ret, frame = cap.read()
-        nowtime = time.time()
-        if ret & ((nowtime - starttime) >  10):
+       # nowtime = time.time()
+        #time.sleep(5)
+        time += 1
+        if time != 5:
+            continue
+       
+        time = 0
+        if ret:
             face_rects = detector(frame, 0)
 
             if (len(face_rects)==0):
@@ -125,13 +137,13 @@ def main():
                     print("extremely down.")
                 elif(s=='Inclined Sitting Position.' or s=='You are overly inclined.'):
                     print("You are overly inclined.")
-                    
+
             if len(face_rects) > 0:
                 shape = predictor(frame, face_rects[0])
                 shape = face_utils.shape_to_np(shape)
                 """if 'shape' is locals():
                     print('we got it')"""
-                
+
                 reprojectdst, euler_angle = get_head_pose(shape)
 
                 for (x, y) in shape:
@@ -139,14 +151,14 @@ def main():
 
                # for start, end in line_pairs:
                   #  cv2.line(frame, reprojectdst[start], reprojectdst[end], (0, 0, 255))
-                
+
                 cv2.putText(frame, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
                             0.75, (0, 0, 0), thickness=2)
                 cv2.putText(frame, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50), cv2.FONT_HERSHEY_SIMPLEX,
                             0.75, (0, 0, 0), thickness=2)
                 cv2.putText(frame, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
                             0.75, (0, 0, 0), thickness=2)
-                
+
             cv2.imshow("demo", frame)
             f=0
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -157,10 +169,10 @@ def main():
             # when everthign done, release the capture
             #cap.release()
             #cv2.destroyAllWindows()
-            starttime = nowtime
+            #starttime = nowtime
             if(f==1):
                return None
-  
+
 def speak(text):
     tts = gTTS(text = text, lang ="en")
     filename = "voice.mp3"
@@ -173,13 +185,12 @@ def speak_alt(text):
     engine.setProperty('rate', 120)
     engine.setProperty('volume', 0.9)
     engine.runAndWait()
-    
 
 def speak_pygame():
     pygame.init()
     #pygame.mixer.init()
     sounda = pygame.mixer.Sound("chime.wav")
     pygame.mixer.Sound.play(sounda)
-        
+    
 if __name__ == '__main__':
     main()

@@ -98,7 +98,7 @@ def get_head_pose(shape):
     #pitch = euler_angle[0]
     #print(pitch)
         print(s)
-        speak(s)
+        #speak(s)
     return reprojectdst, euler_angle
  
     
@@ -164,6 +164,13 @@ def speak(text):
     filename = "voice.mp3"
     tts.save(filename)
     playsound.playsound(filename)
+
+def speak_alt(text):
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.setProperty('rate', 120)
+    engine.setProperty('volume', 0.9)
+    engine.runAndWait()
         
 if __name__ == '__main__':
     main()

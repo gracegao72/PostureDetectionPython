@@ -11,3 +11,10 @@ def speak(text):
     playsound.playsound(filename)
     
 speak("hello tim")
+
+def speak_alt(text):
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.setProperty('rate', 120)
+    engine.setProperty('volume', 0.9)
+    engine.runAndWait()

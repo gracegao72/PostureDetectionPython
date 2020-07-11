@@ -114,7 +114,7 @@ def main():
     while cap.isOpened():
         ret, frame = cap.read()
         nowtime = time.time()
-        if ret & ((nowtime - starttime) >  10):
+        if ret & (nowtime - starttime == 30):
             face_rects = detector(frame, 0)
 
             if (len(face_rects)==0):

@@ -2,12 +2,8 @@ import cv2
 import dlib
 import numpy as np
 from imutils import face_utils
-#this is for audio
-import os
-import time
-import playsound
-import speech_recognition as sr
-from gtts import gTTS
+import sys
+
 
 
 face_landmark_path = './shape_predictor_68_face_landmarks.dat'
@@ -52,6 +48,8 @@ line_pairs = [[0, 1], [1, 2], [2, 3], [3, 0],
 s=''
 i=0
 pit = [0,0,0,0,0,0,0]
+
+
 def get_head_pose(shape):
     global s
     global i
@@ -85,86 +83,101 @@ def get_head_pose(shape):
         for k in range(7):
             avg+=pit[k]
         if(avg/7>2 and avg/7<=17):
-            speak('Humped Back Sitting.')
-            print("Humped Back Sitting.")
+            s= "Humped Back Sitting."
             
         elif(avg/7<-2 and avg/7>=-17):
-            speak('Inclined Sitting Position.')
-            print("Inclined Sitting Position.")
+            s = 'Inclined Sitting Position.'
+          
         elif(avg/7>17):
-            speak('You are looking down.')
-            print("You are looking down.")
+            s = 'You are looking down.'
+            
         elif(avg/7<-17):
-            speak('You are overly inclined.')
-            print("You are overly inclined.")
+            s = 'You are overly inclined.'
+          
         else:
-            speak('You are approximatly sitting straight.')
-            print("You are approximatly sitting straight.") 
-    #pitch = euler_angle[0]
-    #print(pitch)
+            s = "You are approximatly sitting straight."
+    print(s)
+
     return reprojectdst, euler_angle
 
-def speak(text):
-    tts = gTTS(text = text, lang ="en")
-    filename = "voice.mp3"
-    tts.save(filename)
-    playsound.playsound(filename)
-    
+
     
 def main():
     # return
-    cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
-        print("Unable to connect to camera.")
-        return
+
+    ### LOADS IN TEMPORARY PHOTO SAMPLE ####
+    img = cv2.imread(cv2.samples.findFile("temp_photo.jpg"))
+    if img is None:
+        sys.exit("Could not read the image.")
+
+    #cap = cv2.VideoCapture(0) #capturing a video from the video stream
+    #if not cap.isOpened(): #checks to see if cap initialized the video
+    #    print("Unable to connect to camera.")
+    #    return
+
+
     detector = dlib.get_frontal_face_detector()
-    predictor = dlib.shape_predictor("/Users/gracegao/Desktop/CodingPackages/SittingPosturePrediction-master/shape_predictor_68_face_landmarks (1).dat")
+    predictor = dlib.shape_predictor("./shape_predictor_68_face_landmarks (1).dat")
 
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if ret:
-            face_rects = detector(frame, 0)
+    #while cap.isOpened(): #while cap is initialized to the video
+        #ret, frame = cap.read() #ret = boolean (whether or not there was a return at all), frame = nested list --> each frame returned
+        #print(ret, frame)
+    print(img)
+    pass
+    frame = img
+    #if ret:
+    
+    face_rects = detector(frame, 0)
+    print(face_rects)
 
-            if (len(face_rects)==0):
-                #print("I can't see you")
-                if( s=='You are looking down.' or s== 'Humped Back Sitting.'):
-                    print("extremely down.")
-                elif(s=='Inclined Sitting Position.' or s=='You are overly inclined.'):
-                    print("You are overly inclined.")
+####### I am guess that if the face-rectangle isn't found, it uses information from before to print out more detailed info #######
+            
+    if (len(face_rects)==0):
+        print("I can't see you")
+                #if( s=='You are looking down.' or s== 'Humped Back Sitting.'):
+                #    print("extremely down.")
+                #elif(s=='Inclined Sitting Position.' or s=='You are overly inclined.'):
+                #    print("You are overly inclined.")
+                #print("WHEN FACE_RECT == 0: " + s)
                     
-            if len(face_rects) > 0:
-                shape = predictor(frame, face_rects[0])
-                shape = face_utils.shape_to_np(shape)
-                """if 'shape' is locals():
-                    print('we got it')"""
+    if len(face_rects) > 0:
+        print("greater than 0")
+        shape = predictor(frame, face_rects[0])
+        shape = face_utils.shape_to_np(shape)
+        """if 'shape' is locals():
+            print('we got it')"""
                 
-                reprojectdst, euler_angle = get_head_pose(shape)
+        reprojectdst, euler_angle = get_head_pose(shape)
 
-                for (x, y) in shape:
-                    cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
+##### MAPS OUT THE POINTS ON THE FACE ##########
 
-                for start, end in line_pairs:
-                    cv2.line(frame, reprojectdst[start], reprojectdst[end], (0, 0, 255))
-                
-                cv2.putText(frame, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
-                            0.75, (0, 0, 0), thickness=2)
-                cv2.putText(frame, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50), cv2.FONT_HERSHEY_SIMPLEX,
-                            0.75, (0, 0, 0), thickness=2)
-                cv2.putText(frame, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
-                            0.75, (0, 0, 0), thickness=2)
+                #for (x, y) in shape:
+                #    cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
+                    
+##### MAPS OUT THE COORDINATES ON THE FRAME #######                
+                #cv2.putText(frame, "X: " + "{:7.2f}".format(euler_angle[0, 0]), (20, 20), cv2.FONT_HERSHEY_SIMPLEX,
+                #            0.75, (0, 0, 0), thickness=2)
+                #cv2.putText(frame, "Y: " + "{:7.2f}".format(euler_angle[1, 0]), (20, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                #            0.75, (0, 0, 0), thickness=2)
+                #cv2.putText(frame, "Z: " + "{:7.2f}".format(euler_angle[2, 0]), (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
+                #            0.75, (0, 0, 0), thickness=2)
 
-            cv2.imshow("demo", frame)
-            f=0
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                cap.release()
-                cv2.destroyAllWindows()
-                f=1
-                break
-            # when everthign done, release the capture
-            #cap.release()
-            #cv2.destroyAllWindows()
-        if(f==1):
-            return None
+###### DISPLAYS THE VIDEO STREAM ########
+            #cv2.imshow("demo", frame) #displays the frame (basically the image)
+            
+            #f=0
+    cv2.imshow("Display window", img)
+    k = cv2.waitKey(0)
+            
+#### BREAKS THE VIDEO ######           
+            #if cv2.waitKey(1) & 0xFF == ord('q'):
+            #    cap.release()
+            #    cv2.destroyAllWindows()
+            #    f=1
+            #    break
+             
+        #if(f==1):
+        #    return None
         
         
 if __name__ == '__main__':
